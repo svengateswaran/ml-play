@@ -1,0 +1,107 @@
+body {
+    margin :0px;
+    font-family : 'Open Sans Light';
+    color : #000;
+}
+#title{
+    width:calc(100% - 20px);
+    text-align:center;
+    padding:10px;
+    height:25px;
+    background:#E03131;
+    font-size:18px;
+    letter-spacing: 2px;
+    color:#fff;
+}
+#desc{
+    width:calc(100% - 20px);
+    text-align:center;
+    padding:10px;
+    background:#555555;
+    font-size:18px;
+    letter-spacing: 2px;
+    color:#fff;
+    line-height:1.5em;
+    font-size:14px;
+}
+#desc a{
+    text-decoration:none;
+    color:#E03131;
+}
+#demo_area {
+}
+
+#data_plot {
+  width: 300px;
+  margin:50px;
+  float:left;
+}
+
+#canvas_container {
+  float:left;
+  width: 300px;
+  height: 300px;
+  border:#000 1px solid;
+}
+
+#data_controls {
+  float:left;
+
+}
+
+#data_table_container {
+  margin: 50px;
+  float:left;
+}
+
+#data_table {
+  width:370px;
+}
+
+#data_table th {
+  background-color: #E03131;
+  color: white;
+}
+
+#data_table thead, tbody {
+  display: block;
+}
+
+#data_table tbody {
+  height:250px;
+  overflow-y: auto;
+}
+
+#data_table th, td {
+  padding: 8px;
+  text-align: center;
+  width:40px;
+}
+
+#data_table tr:nth-child(even) {
+  background-color: #f2f2f2;
+  color:#000;
+}
+
+#data_table tr:hover {
+  background-color:#555555;
+  color:#FFF;
+}
+
+#parameters_table {
+  float : left;
+  margin:20px;
+  margin-top:50px;
+}
+#parameters_table td{
+  width:55px;
+  height:70px;
+  background: #CCC;
+}
+
+.controls {
+    font-size: 20px;
+    text-align: center;
+    height: 22px;
+    cursor: pointer;
+}

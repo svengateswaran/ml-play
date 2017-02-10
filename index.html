@@ -1,0 +1,57 @@
+<html>
+<head>
+  <title> Vengat's Linear Regression Demo </title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <script type="text/javascript" src="js/paperjs/paper-full.js"></script>
+  <script type="text/javascript" src="js/jquery-1.11.3.js"></script>
+  <script type="text/javascript" src="js/lrdemo.js"></script>
+  <style type="text/css">
+    @font-face {
+      font-family : 'Open Sans';
+      font-style : normal;
+      font-weight : 100;
+      src : local('Open Sans'), local('OpenSans'), url("fonts/OpenSans-Light.ttf");
+    }
+    @font-face {
+      font-family : 'Open Sans Light';
+      font-style : normal;
+      font-weight : 100;
+      src : local('Open Sans Light'), local('OpenSans-Light'), url("fonts/OpenSans.woff2");
+    }
+  </style>
+  <link rel="stylesheet" type="text/css" href="css/style.css" />
+</head>
+<body>
+  <div id="title">
+    Vengat's Linear Regression Demo
+  </div> <!--title-->
+  <div id="desc">
+    <p>Welcome to the Demo! <br>
+    This Demo is inspired by the "<a href="http://vision.stanford.edu/teaching/cs231n/linear-classify-demo/">Linear Classification Loss Visualization</a>" demo by Andrej Karpathy</p>
+  </div> <!--desc-->
+
+  <div id="demo_area">
+    <div id="data_plot">
+      <canvas id="canvas_container" resize></canvas>
+      <div id="data_controls">
+      <label> class </label> <br>
+        <input type="radio" name="data_class" value="0" checked> 0<br>
+        <input type="radio" name="data_class" value="1"> 1<br>
+      </div> <!--data_controls-->
+    </div> <!--data_plot-->
+
+    <div id="parameters_container">
+      <table id="parameters_table">
+      </table>
+    </div> <!--parameters_container-->
+
+    <div id="data_table_container">
+      <table id="data_table">
+        <thead><th> x[0] </th> <th> x[1] </th> <th> y </th></thead>
+        <tbody></tbody>
+      </table>
+    </div> <!--data_table_container-->
+
+  </div> <!--demo_area-->
+</body>
+</html>
