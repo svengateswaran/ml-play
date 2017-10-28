@@ -10,10 +10,10 @@ margin:0px;
 
 <body>
   <!--Load three.js-->
-  <script src="http://threejs.org/build/three.min.js"></script>
-  <script src="http://threejs.org/examples/js/controls/OrbitControls.js"></script>
-  <script src="http://threejs.org/examples/js/renderers/CanvasRenderer.js"></script>
-  <script src="http://threejs.org/examples/js/renderers/Projector.js"></script>
+  <script src="threejs/three.min.js"></script>
+  <script src="threejs/OrbitControls.js"></script>
+  <script src="threejs/CanvasRenderer.js"></script>
+  <script src="threejs/Projector.js"></script>
 
   <script>
 
@@ -66,7 +66,7 @@ margin:0px;
                                   var ix = kc * (ih* (neuron_spacing + neuron_size) + channel_spacing) + lix * neuron_spacing;
                                   var iy = liy * neuron_spacing;
                                   var iz = (index - 1) * layer_spacing;
-                                if(1) {  // if (lix >= 0 && lix < iw && liy >= 0 && liy < ih) {
+                                  if (lix >= 0 && lix < iw && liy >= 0 && liy < ih) {
                                       var geometry = new THREE.Geometry();
                      		      geometry.vertices.push(particle.position);
      	                	      geometry.vertices.push(new THREE.Vector3( ix, iy, iz ));
@@ -118,6 +118,7 @@ margin:0px;
                 var h = 10, w = 10;
                 var kh = 3, kw = 3;
                 
+                /* Build a simple CNN */
                 draw_layer(scene, material, 0, h, w, h, w, kh, kw, 0, 3);
                 draw_layer(scene, material, 1, h, w, h, w, kh, kw, 3, 2);
                 draw_layer(scene, material, 2, h, w, h, w, kh, kw, 2, 3);
