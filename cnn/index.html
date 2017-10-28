@@ -3,13 +3,13 @@
 <head>
 <style>
 body {
-margin:0px;
+  margin:0px;
 }
 </style>
 </head>
 
 <body>
-
+  <canvas id="canvas" height=100 width=100 style='display:none'> </canvas>
   <script src="threejs/three.min.js"></script>
   <script src="threejs/OrbitControls.js"></script>
   <script src="threejs/CanvasRenderer.js"></script>
@@ -17,151 +17,212 @@ margin:0px;
 
   <script>
 
-	var mouseX = 0, mouseY = 0,
-	windowHalfX = window.innerWidth / 2,
-	windowHalfY = window.innerHeight / 2,
-	SEPARATION = 200,
-	AMOUNTX = 10,
-	AMOUNTY = 10,
-	camera, scene, renderer;
-        show_all = 0;
-	init();
-	animate();
+		windowHalfX = window.innerWidth / 2,
+		windowHalfY = window.innerHeight / 2,
+		SEPARATION = 200,
+		AMOUNTX = 10,
+		AMOUNTY = 10;
+    show_all = 1;
+    show_all_connected = 0;
+    show_image = 1;
+		init();
+		animate();
 
 
-        function draw_layer(scene, material, index, ih, iw, oh, ow, kh, kw, c, f) {
+    function draw_layer(scene, input_neurons, selected_neurons, data, index, ih, iw, oh, ow, kh, kw, c, f) {
 
-                neuron_size = 5;
-                neuron_spacing = 20;
-                channel_spacing = 10;
-                layer_spacing = 500;
+      neurons = [];
+      neurons_index = [];
+      neuron_size = 5;
+      neuron_spacing = 6;
+      channel_spacing = 5;
+      layer_spacing = 300;
+  
+      var pad_h = Math.floor(kh / 2);
+      var pad_w = Math.floor(kw / 2);
+      if(oh == 1 && ow  == 1) {
+        pad_h = 0;
+        pad_w = 0;
+      } 
 
-            
-                var pad_h = Math.floor(kh / 2);
-                var pad_w = Math.floor(kw / 2);
-                if(oh == 1 && ow  == 1) {
-                  pad_h = 0;
-                  pad_w = 0;
-                } 
-                  
-		for ( var i = 0; i < oh; i++ ) {
+      input_length = c * (iw * (neuron_spacing + neuron_size) + channel_spacing);
+      output_length = f * (ow * (neuron_spacing + neuron_size) + channel_spacing);
+      
+      output_offset = output_length / 2;
+      input_offset = input_length / 2;
+      
+		  for ( var i = 0; i < oh; i++ ) {
   		  for ( var j = 0; j < ow; j++ ) {
-		    for ( var k = 0; k < f; k++ ) {
+		      for ( var k = 0; k < f; k++ ) {
+						var PI2 = Math.PI * 2;
+						var material = new THREE.SpriteCanvasMaterial( {
+							color: 0xffffff,
+							program: function ( context ) {
+								context.beginPath();
+								context.arc( 0, 0, 0.5, 0, PI2, true );
+								context.fill();
+							}
+						} );
 
-                        var particle = new THREE.Sprite(material);
-			particle.position.x = k * (oh*(neuron_spacing+neuron_size) + channel_spacing) + (i * neuron_spacing);
-			particle.position.y = j * neuron_spacing;
-		        particle.position.z = index * layer_spacing;
-			particle.scale.x = particle.scale.y = neuron_size;
-			scene.add(particle);
+            var particle = new THREE.Sprite(material);
+            if(show_image) {
+              var data_index = j * ow * 4 + i * 4;
+              var color = data[data_index];
+              var color_str = "rgb(" + color + ", " + color + ", " + color + ")";
+              particle.material.color.set(color_str);
+            }
+
+            particle_index  = i * oh * f + j * f + k;
+		      	particle.position.x = k * (oh*(neuron_spacing+neuron_size) + channel_spacing) + (i * neuron_spacing) - output_offset;
+      			particle.position.y = -(j * neuron_spacing);
+		        particle.position.z =  - index * layer_spacing;
+	      		particle.scale.x = particle.scale.y = neuron_size;
                        
-                        var l_color = 0xffcc00;
+            var l_color = 0xffcc00;
                          
-                        if (show_all || (i == Math.floor(ow/2) && j == Math.floor(oh/2) && k == Math.floor(f/2))) {
-
-                        if (index > 0) {
-                            for (var ki = 0; ki < kh; ki++) {
-                              for (var kj = 0; kj < kw; kj++) {
-                                for (var kc = 0; kc < c; kc++) {
-
-                                  var lix = i + ki - pad_h;
-                                  var liy = j + kj - pad_w;
-                                  var ix = kc * (ih* (neuron_spacing + neuron_size) + channel_spacing) + lix * neuron_spacing;
-                                  var iy = liy * neuron_spacing;
-                                  var iz = (index - 1) * layer_spacing;
-                                  if (lix >= 0 && lix < iw && liy >= 0 && liy < ih) {
-                                      var geometry = new THREE.Geometry();
-                     		      geometry.vertices.push(particle.position);
-     	                	      geometry.vertices.push(new THREE.Vector3( ix, iy, iz ));
-                                      var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: l_color, opacity: 1 } ) );
-                	              scene.add(line);
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
+            if (show_all || (i == Math.floor(ow/2) && j == Math.floor(oh/2) && k == Math.floor(f/2))) {
+              if (index > 0) {
+                for (var ki = 0; ki < kh; ki++) {
+                  for (var kj = 0; kj < kw; kj++) {
+                    for (var kc = 0; kc < c; kc++) {
+                      var lix = i + ki - pad_h;
+                      var liy = j + kj - pad_w;
+                      var ix = kc * (ih* (neuron_spacing + neuron_size) + channel_spacing) + lix * neuron_spacing;
+                      var iy = liy * neuron_spacing;
+                      var iz = (index - 1) * layer_spacing;
+                      if (lix >= 0 && lix < iw && liy >= 0 && liy < ih) {
+                          var geometry = new THREE.Geometry();
+                          var input_index_w = lix * iw * c + liy * c + kc;
+                          if(show_all_connected) { 
+                      	    geometry.vertices.push(particle.position);
+                            particle.material.color.set(0x0000ff);
+                            input_neurons[input_index_w].material.color.set(0xff0000); 
+             	              geometry.vertices.push(new THREE.Vector3( ix - input_offset, -iy, -iz ));
+                            var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: l_color, linewidth: 5, opacity: 0.5 } ) );
+     	                      scene.add(line);
+                          } else {
+                            if (selected_neurons.includes(input_index_w)) {
+                              particle.material.color.set(0x0000ff);
+                         	    geometry.vertices.push(particle.position);
+                              input_neurons[input_index_w].material.color.set(0xff0000); 
+               	              geometry.vertices.push(new THREE.Vector3( ix - input_offset, -iy, -iz ));
+                              var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: l_color, linewidth: 3, opacity: 0.9 } ) );
+        	                    scene.add(line);
+                              neurons_index.push(particle_index);
+                           }
+                         }
+                      }
                     }
                   }
                 }
-
+              }
+            }
+            neurons.push(particle);
+      			scene.add(particle);
+          }
         }
+      }
+      return [neurons, neurons_index];
+    }
 
-	function init() {
-		var container, separation = 100, amountX = 50, amountY = 50,
-		particles, particle;
-		container = document.createElement('div');
-		document.body.appendChild(container);
-		camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
-		camera.position.z = 1000;
-		scene = new THREE.Scene();
-		renderer = new THREE.CanvasRenderer();
-		renderer.setPixelRatio( window.devicePixelRatio );
-		renderer.setSize( window.innerWidth, window.innerHeight );
-		container.appendChild( renderer.domElement );
+    function draw_network (data, h, w, kh, kw, in_c, fc, outputs, simple) {
 
-                var controls = new THREE.OrbitControls( camera, renderer.domElement );
-                controls.enableDamping = true;
-                controls.dampingFactor = 0.25;
-                controls.rotateSpeed = 0.8;
+      var s_h = Math.floor(h / 2);
+      var s_w = Math.floor(w / 2);
+      var s_c = Math.floor(in_c / 2);
+      var s_index  = s_w * w * in_c + s_h * in_c + s_c;
 
+      /* Build a CNN Network */
+      if(simple) {
+        neurons = draw_layer(scene, [], [], data, 0, h, w, h, w, kh, kw, 1, in_c);
+        neurons = draw_layer(scene, neurons[0], [s_index], data, 1, h, w, h, w, kh, kw, in_c, 2);
+        neurons = draw_layer(scene, neurons[0], neurons[1], data, 2, h, w, h, w, kh, kw, 2, 3);
+        neurons = draw_layer(scene, neurons[0], neurons[1], data, 3, h, w, 1, 1, h, w, 3, fc);
+        neurons = draw_layer(scene, neurons[0], neurons[1], data, 4, 1, 1, 1, 1, 1, 1, fc, outputs);
+      } else {
+        neurons = draw_layer(scene, [], [], data, 0, h, w, h, w, kh, kw, 1, in_c);
+        neurons = draw_layer(scene, neurons[0], [s_index], data, 1, h, w, h, w, kh, kw, in_c, 5);
+        neurons = draw_layer(scene, neurons[0], neurons[1], data, 2, h, w, h, w, kh, kw, 5, 3);
+        neurons = draw_layer(scene, neurons[0], neurons[1], data, 3, h, w, h, w, kh, kw, 3, 8);
+        neurons = draw_layer(scene, neurons[0], neurons[1], data, 4, h, w, h, w, kh, kw, 8, 3);
+        neurons = draw_layer(scene, neurons[0], neurons[1], data, 5, h, w, 1, 1, h, w, 3, fc);
+        neurons = draw_layer(scene, neurons[0], neurons[1], data, 6, 1, 1, 1, 1, 1, 1, fc, outputs);
+      }
+    }
 
+  	function init() {
+			var container, separation = 100, amountX = 50, amountY = 50,
+			particles, particle;
+			container = document.createElement('div');
+			document.body.appendChild(container);
+			camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
+			camera.position.z = 500;
+			camera.position.y = 500;
+			scene = new THREE.Scene();
+			renderer = new THREE.CanvasRenderer();
+			renderer.setPixelRatio( window.devicePixelRatio );
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			container.appendChild( renderer.domElement );
+  
+      var controls = new THREE.OrbitControls( camera, renderer.domElement );
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.25;
+      controls.rotateSpeed = 0.8;
 
-		// particles
-		var PI2 = Math.PI * 2;
-		var material = new THREE.SpriteCanvasMaterial( {
-			color: 0xffffff,
-			program: function ( context ) {
-				context.beginPath();
-				context.arc( 0, 0, 0.5, 0, PI2, true );
-				context.fill();
-			}
-		} );
-		var geometry = new THREE.Geometry();
-              
-               
-                
-                var h = 10, w = 10;
-                var kh = 3, kw = 3;
-                in_c = 3;
-                var fc = 32;
-                var outputs = 2;
-                  
-               /* 
-                var h = 48, w = 48;
-                var kh = 3, kw = 3;
-                in_c = 1;
-                var fc = 64;
-                var outputs = 10;
-                */
-             
-                /* Build a simple CNN */
-                draw_layer(scene, material, 0, h, w, h, w, kh, kw, 0, in_c);
-                draw_layer(scene, material, 1, h, w, h, w, kh, kw, in_c, 2);
-                draw_layer(scene, material, 2, h, w, h, w, kh, kw, 2, 3);
-                draw_layer(scene, material, 3, h, w, 1, 1, h, w, 3, fc);
-                draw_layer(scene, material, 4, 1, 1, 1, 1, 1, 1, fc, outputs);
-	}
+			// particles
+			var geometry = new THREE.Geometry();
 
 
-	function animate() {
-		requestAnimationFrame( animate );
-		render();
-	}
-	function render() {
-		renderer.render( scene, camera );
-	}
+      var h = 10, w = 10;
+      var kh = 3, kw = 3;
+      var in_c = 3;
+      var fc = 32;
+      var outputs = 2;
+      var image_data, data;
+        
+      if(show_image) {             
+        h = 48;
+        w = 48;
+        kh = 3, kw = 3;
+        in_c = 1;
+        fc = 64;
+        outputs = 10;
+      }       
+      var canvas = document.getElementById( 'canvas' );
+    	var context = canvas.getContext( '2d' );
+      var image = new Image();
+      image.src = "./images/six.png";
+      image.onload = function() {
+          height = image.height;
+          width = image.width;
+          console.log(height);
+          console.log(width);
+         	context.drawImage(image, 0, 0);             
+          image_data = context.getImageData(0, 0, width, height);
+          data = image_data.data;
+          draw_network(data, h, w, kh, kw, in_c, fc, outputs, 1);
+      }
+    }
 
-        function toggle_data() {
-           if(show_all == 1)
-             show_all = 0;
-           else
-             show_all = 1;
-           animate();
-        }
+  	function animate() {
+	  	requestAnimationFrame( animate );
+  		render();
+  	}
+
+  	function render() {
+	  	renderer.render( scene, camera );
+	  }
+
+    function toggle_data() {
+      if (show_all == 1)
+        show_all = 0;
+      else
+        show_all = 1;
+        animate();
+    }
 
   </script>
 
-<!---  <button class="toggle-data-btn" onClick="toggle_data()">Show me something else</button> --->
+  <!--- <button class="toggle-data-btn" onClick="toggle_data()">Show me something else</button> --->
 </body>
 </html>
