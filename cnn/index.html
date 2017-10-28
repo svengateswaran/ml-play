@@ -9,7 +9,7 @@ margin:0px;
 </head>
 
 <body>
-  <!--Load three.js-->
+
   <script src="threejs/three.min.js"></script>
   <script src="threejs/OrbitControls.js"></script>
   <script src="threejs/CanvasRenderer.js"></script>
@@ -24,15 +24,17 @@ margin:0px;
 	AMOUNTX = 10,
 	AMOUNTY = 10,
 	camera, scene, renderer;
+        show_all = 0;
 	init();
 	animate();
+
 
         function draw_layer(scene, material, index, ih, iw, oh, ow, kh, kw, c, f) {
 
                 neuron_size = 5;
                 neuron_spacing = 20;
                 channel_spacing = 10;
-                layer_spacing = 300;
+                layer_spacing = 500;
 
             
                 var pad_h = Math.floor(kh / 2);
@@ -53,9 +55,10 @@ margin:0px;
 			particle.scale.x = particle.scale.y = neuron_size;
 			scene.add(particle);
                        
-                       var l_color = 0xffcc00;
+                        var l_color = 0xffcc00;
                          
-                       // if (index > 0 && (i == 5 && j == 5)) {
+                        if (show_all || (i == Math.floor(ow/2) && j == Math.floor(oh/2) && k == Math.floor(f/2))) {
+
                         if (index > 0) {
                             for (var ki = 0; ki < kh; ki++) {
                               for (var kj = 0; kj < kw; kj++) {
@@ -76,6 +79,7 @@ margin:0px;
                                 }
                               }
                             }
+                          }
                         }
                     }
                   }
@@ -114,16 +118,29 @@ margin:0px;
 			}
 		} );
 		var geometry = new THREE.Geometry();
+              
+               
                 
                 var h = 10, w = 10;
                 var kh = 3, kw = 3;
-                
+                in_c = 3;
+                var fc = 32;
+                var outputs = 2;
+                  
+               /* 
+                var h = 48, w = 48;
+                var kh = 3, kw = 3;
+                in_c = 1;
+                var fc = 64;
+                var outputs = 10;
+                */
+             
                 /* Build a simple CNN */
-                draw_layer(scene, material, 0, h, w, h, w, kh, kw, 0, 3);
-                draw_layer(scene, material, 1, h, w, h, w, kh, kw, 3, 2);
+                draw_layer(scene, material, 0, h, w, h, w, kh, kw, 0, in_c);
+                draw_layer(scene, material, 1, h, w, h, w, kh, kw, in_c, 2);
                 draw_layer(scene, material, 2, h, w, h, w, kh, kw, 2, 3);
-                draw_layer(scene, material, 3, h, w, 1, 1, h, w, 3, 10);
-                draw_layer(scene, material, 4, 1, 1, 1, 1, 1, 1, 10, 3);
+                draw_layer(scene, material, 3, h, w, 1, 1, h, w, 3, fc);
+                draw_layer(scene, material, 4, 1, 1, 1, 1, 1, 1, fc, outputs);
 	}
 
 
@@ -135,7 +152,16 @@ margin:0px;
 		renderer.render( scene, camera );
 	}
 
- 
+        function toggle_data() {
+           if(show_all == 1)
+             show_all = 0;
+           else
+             show_all = 1;
+           animate();
+        }
+
   </script>
+
+<!---  <button class="toggle-data-btn" onClick="toggle_data()">Show me something else</button> --->
 </body>
 </html>
