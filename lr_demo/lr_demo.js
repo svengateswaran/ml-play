@@ -130,7 +130,18 @@ $(document).ready(function(){
   var tool = new Tool();
 
   /* classes are identified by the HEX color code */
-  classes = ["#E03131", "#31E031"]
+  classes = ["#E03131", "#31E031", "#3131E0"]
+
+  var data_controls = document.getElementById("data_controls");
+  for (var i = 2; i < classes.length; i++) {
+    var input = document.createElement("input");
+    input.type = "radio";
+    input.name = "data_class";
+    input.value = i.toString();
+    data_controls.append(input);
+    data_controls.innerHTML += " " + input.value + "<br>";
+  }
+
 
   /* Group to hold the data points */
   var data_points = new Group();
@@ -163,10 +174,10 @@ $(document).ready(function(){
   }
 
   /* Drawing Hypothesis(decision boundary) line */
-  var hypothesis_line = new Path(new Point(canvas_width + 1, 0),
-                                 new Point(0, canvas_height + 1));
-  hypothesis_line.strokeColor = "#DDDD12";
-  hypothesis_line.strokeWidth = 2;
+  // var hypothesis_line = new Path(new Point(canvas_width + 1, 0),
+  //                                new Point(0, canvas_height + 1));
+  // hypothesis_line.strokeColor = "#DDDD12";
+  // hypothesis_line.strokeWidth = 2;
 
   /* Mouse click event to create data points on the canvas */
   tool.onMouseDown = function(event) {
