@@ -102,6 +102,7 @@ function ComputeLoss() {
     
     var l = 0;
 
+
     for (var c = 0; c < classes.length; c++) {
       if (y != c)
         l += Math.max(0, s_i[c] - s_i[y] + 1);
@@ -110,6 +111,16 @@ function ComputeLoss() {
     /* Update loss on the table */
     row.cells[3 + classes.length].innerHTML = l;
   }
+}
+
+function CreateDataPoint(x, y, c) {
+  var new_point = new Point(x + canvas_width/2 , -(y - canvas_height/2));
+  var new_circle = new Path.Circle(new_point, 5);
+
+  new_circle.fillColor = classes[c];
+
+  data_points.addChild(new_circle);
+  AddPointToTable(data_table, classes, new Point(x, y), c);
 }
 
 $(document).ready(function(){
@@ -144,12 +155,12 @@ $(document).ready(function(){
 
 
   /* Group to hold the data points */
-  var data_points = new Group();
+  data_points = new Group();
 
   var data_table_header = document.getElementById("data_table").getElementsByTagName('thead')[0];
-  var data_table = document.getElementById("data_table").getElementsByTagName('tbody')[0];
+  data_table = document.getElementById("data_table").getElementsByTagName('tbody')[0];
 
-  var param_table = document.getElementById("parameters_table");
+  param_table = document.getElementById("parameters_table");
 
   AddClassSpecificColumn(classes, data_table_header);
 
@@ -170,7 +181,7 @@ $(document).ready(function(){
                                    new Point(300, 150 + i * 50));
     classifier_line.strokeColor = classes[i];
     classifier_line.strokeWidth = 2;
-  classifier_lines.push(classifier_line);
+    classifier_lines.push(classifier_line);
   }
 
   /* Drawing Hypothesis(decision boundary) line */
@@ -179,22 +190,28 @@ $(document).ready(function(){
   // hypothesis_line.strokeColor = "#DDDD12";
   // hypothesis_line.strokeWidth = 2;
 
+  /* Load sample points */
+  var num_sample_points = 3;
+  var sample_points = [[[ 70, 100], [ 80, 20], [ 90, 70]],
+                       [[-70, 100], [-80, 20], [-90, 70]],
+                       [[ 70,-100], [ 80,-20], [ 90,-70]]];
+
+  for(var i = 0; i < classes.length; i++) {
+    for (var j = 0; j < num_sample_points; j++) {
+       CreateDataPoint(sample_points[i][j][0], sample_points[i][j][1], i);
+    }
+  }
+
   /* Mouse click event to create data points on the canvas */
   tool.onMouseDown = function(event) {
-    var new_circle = new Path.Circle(new Point(event.point), 5);
 
     var cur_class_radio = document.getElementsByName("data_class");
     for(var i = 0; i < cur_class_radio.length; i++) {
       if(cur_class_radio[i].checked == true)
         break;
     }
-    var cur_class = i; /* class id */
-    new_circle.fillColor = classes[i];
 
-    data_points.addChild(new_circle);
-    var new_point = new Point(new_circle.position.x - canvas_width / 2,
-                              -(new_circle.position.y - canvas_height / 2));
-    AddPointToTable(data_table, classes, new_point, cur_class);
+    CreateDataPoint(event.point.x - canvas_width/2, - (event.point.y - canvas_height/2), i);
   }
 
 //  Just an Fun Animation till things get Ready
