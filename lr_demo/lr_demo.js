@@ -29,9 +29,12 @@ function AddPointToTable(table, classes, point, data) {
 }
 
 function CreateParameterCell(name) {
+
+  var data_value = Math.random().toPrecision(2);
+
   var name = "<div>" + name + "</div>";
   var up = "<div class='controls'>▲</div>";
-  var data = "<div>0</div>";
+  var data = "<div>" + data_value + "</div>";
   var diff = "<div>0</div>";
   var down = "<div class='controls'>▼</div>";
   var parameter_cell = name +
@@ -54,10 +57,115 @@ function CreateParametersTable(classes, table) {
   }
 }
 
+function GradientDescent() {
+
+  learning_rate = 0.00015;
+
+  ComputeLoss();
+
+  /*
+   * Initialize Local Weights and Gradients
+   */
+  var d_w0 = [];
+  var d_w1 = [];
+  var d_b  = [];
+
+  var w_w0 = [];
+  var w_w1 = [];
+  var w_b  = [];
+  
+  for (var c = 0; c < classes.length; c++) {
+    d_w0.push(0);
+    d_w1.push(0);
+    d_b.push(0);
+
+    w_w0.push(parseFloat($(param_table.rows[c].cells[0]).children()[2].innerHTML));
+    w_w1.push(parseFloat($(param_table.rows[c].cells[1]).children()[2].innerHTML));
+    w_b.push(parseFloat($(param_table.rows[c].cells[2]).children()[2].innerHTML));
+
+  }
+
+  /*
+   * Calculating Gradients
+   */
+  var num_data = parseFloat(data_table.rows.length);
+  for (var i = 0; i < num_data; i++) {
+
+    var row = data_table.rows[i];
+    var x0  = parseFloat(row.cells[0].innerHTML);
+    var x1  = parseFloat(row.cells[1].innerHTML);
+    var y   = parseFloat(row.cells[2].innerHTML);
+    var s_i = [];
+    
+    for (var c = 0; c < classes.length; c++)
+      s_i.push(parseFloat(row.cells[3 + c].innerHTML));
+  
+    l_yi = 0;
+    for (var c = 0; c < classes.length; c++) {
+      if (y != c)
+        l_yi += ((s_i[c] - s_i[y] + 1) > 0);
+    }
+
+    /* Sum the gradients of each data point to take Mean */
+    for (var j = 0; j < classes.length; j++) {
+      if (j == y) {
+        d_w0[j] += l_yi * -(x0);
+        d_w1[j] += l_yi * -(x1);
+        d_b[j]  += l_yi * -1;
+      } else {
+        l_ij = ((s_i[c] - s_i[y] + 1) > 0);
+        d_w0[j] += l_yi * x0;
+        d_w1[j] += l_yi * x1;
+        d_b[j]  += l_yi;
+      } 
+    }
+  }
+
+  /*
+   * Calculating Mean of Gradients & Updating Weights
+   *
+   * Also Update the params table
+   */
+  for (var c = 0; c < classes.length; c++) {
+
+    /* calculate mean */
+    d_w0[c] /= num_data;
+    d_w1[c] /= num_data;
+    d_b[c]  /= num_data;
+    
+    /* Update Weights */
+    w_w0[c] += - (learning_rate * d_w0[c]);
+    w_w1[c] += - (learning_rate * d_w1[c]);
+    w_b[c]  += - (learning_rate * d_b[c]);
+
+    /* Update gradients in params table */
+    $(param_table.rows[c].cells[0]).children()[3].innerHTML = d_w0[c].toPrecision(2);
+    $(param_table.rows[c].cells[1]).children()[3].innerHTML = d_w1[c].toPrecision(2);
+    $(param_table.rows[c].cells[2]).children()[3].innerHTML = d_b[c].toPrecision(2);
+  
+
+    /* Update Weights in params table */
+    
+    $(param_table.rows[c].cells[0]).children()[2].innerHTML = w_w0[c].toPrecision(2);
+    $(param_table.rows[c].cells[1]).children()[2].innerHTML = w_w1[c].toPrecision(2);
+    $(param_table.rows[c].cells[2]).children()[2].innerHTML = w_b[c].toPrecision(2);
+    
+  }
+
+  counter += 1;
+  if (counter % 10 == 0) {
+    console.log("iterations : " + counter);
+
+    console.log(d_w0);
+    console.log(d_w1);
+    console.log(d_b);
+  }
+}
+
 /* Function to calculate the loss */
 function ComputeLoss() {
-  var param_table = document.getElementById("parameters_table");
-  var data_table = document.getElementById("data_table").getElementsByTagName('tbody')[0];
+
+  var loss_sum = 0;
 
   for (var i = 0; i < data_table.rows.length; i++) {
 
@@ -76,7 +184,7 @@ function ComputeLoss() {
       var s = x0 * w0 + x1 * w1 + b;
 
       /* Update result on the table */
-      row.cells[3 + c].innerHTML = s;
+      row.cells[3 + c].innerHTML = s.toPrecision(2);
 
       /* Update classifier lines */
       var classifier_line = classifier_lines[c];
@@ -102,15 +210,20 @@ function ComputeLoss() {
     
     var l = 0;
 
-
     for (var c = 0; c < classes.length; c++) {
       if (y != c)
         l += Math.max(0, s_i[c] - s_i[y] + 1);
     }
     
     /* Update loss on the table */
-    row.cells[3 + classes.length].innerHTML = l;
+    row.cells[3 + classes.length].innerHTML = l.toPrecision(2);
+
+    loss_sum += l
   }
+
+
+  document.getElementById("loss_mean_value").innerHTML = loss_sum / parseFloat(data_table.rows.length);
+
 }
 
 function CreateDataPoint(x, y, c) {
@@ -226,6 +339,10 @@ $(document).ready(function(){
   /*
    * This event is to change the parameters manually
    */
+
+  num_iterations = 4000;
+  mod_value = .1;
+
   $(".controls").click(function(){
     var up = $(this).parent().children()[1];
     var data = $(this).parent().children()[2];
@@ -234,10 +351,15 @@ $(document).ready(function(){
 
     var control_type = $(this)[0].innerHTML;
     if (control_type.localeCompare("▲") == 0)
-      data.innerHTML = parseInt(data.innerHTML) + 1;
+      data.innerHTML = (parseFloat(data.innerHTML) + mod_value).toPrecision(2);
     else
-      data.innerHTML = parseInt(data.innerHTML) - 1;
+      data.innerHTML = (parseFloat(data.innerHTML) - mod_value).toPrecision(2);
 
     ComputeLoss();
   });
+
+
+  counter = 0;
+  var x = setInterval(GradientDescent, 1000);
+
 });
