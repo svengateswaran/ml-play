@@ -16,8 +16,8 @@ function AddPointToTable(table, classes, point, data) {
   var table_x = table_row.insertCell(0);
   var table_y = table_row.insertCell(1);
   var table_data = table_row.insertCell(2);
-  table_x.innerHTML = Math.floor(point.x);
-  table_y.innerHTML = Math.floor(point.y);
+  table_x.innerHTML = point.x;
+  table_y.innerHTML = point.y;
   table_data.innerHTML = data;
   for (var i = 0; i < classes.length; i++) {
     var class_cell = table_row.insertCell();
@@ -30,12 +30,12 @@ function AddPointToTable(table, classes, point, data) {
 
 function CreateParameterCell(name) {
 
-  var data_value = Math.random().toPrecision(2);
+  var data_value = (Math.random()).toFixed(2) * (Math.random() > 0.5 ? 1 : -1);
 
   var name = "<div>" + name + "</div>";
   var up = "<div class='controls'>▲</div>";
   var data = "<div>" + data_value + "</div>";
-  var diff = "<div>0</div>";
+  var diff = "<div style='font-style: italic; color:#E03131'>0</div>";
   var down = "<div class='controls'>▼</div>";
   var parameter_cell = name +
                        up +
@@ -59,7 +59,7 @@ function CreateParametersTable(classes, table) {
 
 function GradientDescent() {
 
-  learning_rate = 0.00015;
+  learning_rate = 0.001;
 
   ComputeLoss();
 
@@ -113,10 +113,10 @@ function GradientDescent() {
         d_w1[j] += l_yi * -(x1);
         d_b[j]  += l_yi * -1;
       } else {
-        l_ij = ((s_i[c] - s_i[y] + 1) > 0);
-        d_w0[j] += l_yi * x0;
-        d_w1[j] += l_yi * x1;
-        d_b[j]  += l_yi;
+        l_ij = ((s_i[j] - s_i[y] + 1) > 0);
+        d_w0[j] += l_ij * x0;
+        d_w1[j] += l_ij * x1;
+        d_b[j]  += l_ij;
       } 
     }
   }
@@ -134,37 +134,57 @@ function GradientDescent() {
     d_b[c]  /= num_data;
     
     /* Update Weights */
-    w_w0[c] += - (learning_rate * d_w0[c]);
-    w_w1[c] += - (learning_rate * d_w1[c]);
-    w_b[c]  += - (learning_rate * d_b[c]);
+    w_w0[c] -= (learning_rate * d_w0[c]);
+    w_w1[c] -= (learning_rate * d_w1[c]);
+    w_b[c]  -= (learning_rate * d_b[c]);
 
     /* Update gradients in params table */
-    $(param_table.rows[c].cells[0]).children()[3].innerHTML = d_w0[c].toPrecision(2);
-    $(param_table.rows[c].cells[1]).children()[3].innerHTML = d_w1[c].toPrecision(2);
-    $(param_table.rows[c].cells[2]).children()[3].innerHTML = d_b[c].toPrecision(2);
+    $(param_table.rows[c].cells[0]).children()[3].innerHTML = d_w0[c].toFixed(2);
+    $(param_table.rows[c].cells[1]).children()[3].innerHTML = d_w1[c].toFixed(2);
+    $(param_table.rows[c].cells[2]).children()[3].innerHTML = d_b[c].toFixed(2);
   
 
     /* Update Weights in params table */
     
-    $(param_table.rows[c].cells[0]).children()[2].innerHTML = w_w0[c].toPrecision(2);
-    $(param_table.rows[c].cells[1]).children()[2].innerHTML = w_w1[c].toPrecision(2);
-    $(param_table.rows[c].cells[2]).children()[2].innerHTML = w_b[c].toPrecision(2);
+    $(param_table.rows[c].cells[0]).children()[2].innerHTML = w_w0[c].toFixed(2);
+    $(param_table.rows[c].cells[1]).children()[2].innerHTML = w_w1[c].toFixed(2);
+    $(param_table.rows[c].cells[2]).children()[2].innerHTML = w_b[c].toFixed(2);
     
   }
 
+  loss.shift();
+  loss.push(parseFloat(avg_loss));
+
+  loss_canvas.activate();
+  // console.log(loss);
+
+  for (var i = 0; i < loss.length; i++) {
+    loss_lines[i].segments[0].point.y = loss_length - loss[i];
+
+    if (i == loss.length - 1)
+      loss_lines[i].segments[1].point.y = loss_length - loss[i];
+    else
+      loss_lines[i].segments[1].point.y = loss_length - loss[i + 1];
+  }
+
+  paper.view.draw();
+
   counter += 1;
+  
   if (counter % 10 == 0) {
     console.log("iterations : " + counter);
 
     console.log(d_w0);
     console.log(d_w1);
     console.log(d_b);
+    
+    console.log(loss);
   }
+  
 }
 
 /* Function to calculate the loss */
 function ComputeLoss() {
-
   var loss_sum = 0;
 
   for (var i = 0; i < data_table.rows.length; i++) {
@@ -181,28 +201,34 @@ function ComputeLoss() {
       var w0 = parseFloat($(param_table.rows[c].cells[0]).children()[2].innerHTML);
       var w1 = parseFloat($(param_table.rows[c].cells[1]).children()[2].innerHTML);
       var b = parseFloat($(param_table.rows[c].cells[2]).children()[2].innerHTML);
-      var s = x0 * w0 + x1 * w1 + b;
+      var s = (x0 * w0 + x1 * w1 + b);
+
+      console.log("-------------------------------------------")
+      console.log("i : " + i + " | " + " c : " + c)
+      console.log("x0 : " + x0 + " | " + "w0 : " + w0 + " | " + "x1 : " + x1 + " | " + "w1 : " + w1 + " | " + "b : " + b);
+      console.log("s : " + s)
 
       /* Update result on the table */
-      row.cells[3 + c].innerHTML = s.toPrecision(2);
+      row.cells[3 + c].innerHTML = s.toFixed(2);
 
       /* Update classifier lines */
       var classifier_line = classifier_lines[c];
 
-      var x0 = -canvas_width / 2;
-      var x1 = canvas_width / 2;
-      var y0 = 0;
-      var y1 = 0;
+      var lx0 = -canvas_width / 2;
+      var lx1 = canvas_width / 2;
+      var ly0 = 0;
+      var ly1 = 0;
       
       if (w1 != 0) {
-        y0 = -((w0*x0) + b) / w1  ;
-        y1 = -((w0*x1) + b) / w1;
+        ly0 = -((w0*x0) + b) / w1  ;
+        ly1 = -((w0*x1) + b) / w1;
       }
       
-      classifier_line.segments[0].point.x = x0 + canvas_width/2;
-      classifier_line.segments[1].point.x = x1 + canvas_width/2;
-      classifier_line.segments[0].point.y = y0 + canvas_height/2;
-      classifier_line.segments[1].point.y = y1 + canvas_height/2;
+      classifier_line.segments[0].point.x = lx0 + canvas_width/2;
+      classifier_line.segments[1].point.x = lx1 + canvas_width/2;
+      classifier_line.segments[0].point.y = ly0 + canvas_height/2;
+      classifier_line.segments[1].point.y = ly1 + canvas_height/2;
+
 
       paper.view.draw();
       s_i.push(s);
@@ -214,16 +240,16 @@ function ComputeLoss() {
       if (y != c)
         l += Math.max(0, s_i[c] - s_i[y] + 1);
     }
-    
+
     /* Update loss on the table */
-    row.cells[3 + classes.length].innerHTML = l.toPrecision(2);
+    row.cells[3 + classes.length].innerHTML = l.toFixed(2);
 
     loss_sum += l
   }
 
 
-  document.getElementById("loss_mean_value").innerHTML = loss_sum / parseFloat(data_table.rows.length);
-
+  avg_loss = (loss_sum / parseFloat(data_table.rows.length));
+  document.getElementById("loss_mean_value").innerHTML = avg_loss.toFixed(2);
 }
 
 function CreateDataPoint(x, y, c) {
@@ -234,17 +260,25 @@ function CreateDataPoint(x, y, c) {
 
   data_points.addChild(new_circle);
   AddPointToTable(data_table, classes, new Point(x, y), c);
+
 }
 
+function GetRandomValue(scale, precision) {
+ return (Math.random() * scale).toFixed(precision) * (Math.random() > 0.5 ? 1 : -1);
+}
 $(document).ready(function(){
 
   paper.install(window);
-  var canvas = document.getElementById('canvas_container');
+  canvas = document.getElementById('canvas_container');
   canvas_width = canvas.clientWidth;
   canvas_height = canvas.clientHeight;
   console.log("canvas_height : " + canvas_height);
   console.log("canvas_width : " + canvas_width);
-  paper.setup(canvas);
+  vis_canvas = new paper.PaperScope();
+  vis_canvas.setup(canvas);
+
+  window.paper = vis_canvas;
+  paper.install(window);
 
   var background = new Shape.Rectangle({
       rectangle: view.bounds,
@@ -266,6 +300,28 @@ $(document).ready(function(){
     data_controls.innerHTML += " " + input.value + "<br>";
   }
 
+
+  loss_canvas_elmt = document.getElementById('canvas_loss');
+
+  loss_length = loss_canvas_elmt.clientWidth; 
+
+  loss_scale = 2;
+
+   loss = new Array(loss_length / loss_scale);
+
+  loss_canvas = new paper.PaperScope();
+  loss_canvas.setup(loss_canvas_elmt);
+
+  loss_lines = []
+  for (var i = 0; i < loss.length; i++) {
+    var loss_line = new Path.Line(new Point(i * loss_scale, 0),
+                                  new Point(i * loss_scale + 1, 0));
+    loss_line.strokeColor = "#f00";
+    loss_line.strokeWidth = 1;
+    loss_lines.push(loss_line);
+  }
+
+  vis_canvas.activate();
 
   /* Group to hold the data points */
   data_points = new Group();
@@ -304,14 +360,14 @@ $(document).ready(function(){
   // hypothesis_line.strokeWidth = 2;
 
   /* Load sample points */
-  var num_sample_points = 3;
-  var sample_points = [[[ 70, 100], [ 80, 20], [ 90, 70]],
-                       [[-70, 100], [-80, 20], [-90, 70]],
-                       [[ 70,-100], [ 80,-20], [ 90,-70]]];
+
+  var num_sample_points = 1;
 
   for(var i = 0; i < classes.length; i++) {
     for (var j = 0; j < num_sample_points; j++) {
-       CreateDataPoint(sample_points[i][j][0], sample_points[i][j][1], i);
+       var r_x = GetRandomValue(100, 0);
+       var r_y = GetRandomValue(100, 0);
+       CreateDataPoint(r_x, r_y, i);
     }
   }
 
@@ -335,6 +391,7 @@ $(document).ready(function(){
     paper.view.draw();
   }
   */
+ 
 
   /*
    * This event is to change the parameters manually
@@ -351,9 +408,9 @@ $(document).ready(function(){
 
     var control_type = $(this)[0].innerHTML;
     if (control_type.localeCompare("▲") == 0)
-      data.innerHTML = (parseFloat(data.innerHTML) + mod_value).toPrecision(2);
+      data.innerHTML = (parseFloat(data.innerHTML) + mod_value);
     else
-      data.innerHTML = (parseFloat(data.innerHTML) - mod_value).toPrecision(2);
+      data.innerHTML = (parseFloat(data.innerHTML) - mod_value);
 
     ComputeLoss();
   });
@@ -362,4 +419,4 @@ $(document).ready(function(){
   counter = 0;
   var x = setInterval(GradientDescent, 1000);
 
-});
+ });

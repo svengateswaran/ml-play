@@ -44,6 +44,13 @@ body {
   border:#000 1px solid;
 }
 
+#canvas_loss {
+  float:left;
+  width: 200px;
+  height: 200px;
+  border:#000 1px solid;
+}
+
 #data_controls {
   float:left;
 
@@ -55,7 +62,7 @@ body {
 }
 
 #data_table {
-  width:370px;
+/*  width:370px;*/
 }
 
 #data_table th {
@@ -75,7 +82,7 @@ body {
 #data_table th, td {
   padding: 8px;
   text-align: center;
-  width:40px;
+  width:70px;
 }
 
 #data_table tr:nth-child(even) {
@@ -94,7 +101,7 @@ body {
   margin-top:50px;
 }
 #parameters_table td{
-  width:55px;
+  width:70px;
   height:70px;
   background: #CCC;
 }
