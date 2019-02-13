@@ -57,6 +57,36 @@ function CreateParametersTable(classes, table) {
   }
 }
 
+function Inference() {
+  var wb = [];
+  for (var c = 0; c < classes.length; c++) {
+    var w0 = parseFloat($(param_table.rows[c].cells[0]).children()[2].innerHTML);
+    var w1 = parseFloat($(param_table.rows[c].cells[1]).children()[2].innerHTML);
+    var b  = parseFloat($(param_table.rows[c].cells[2]).children()[2].innerHTML);
+    wb.push([w0, w1, b]);  
+  }
+
+  for (var i = 0; i < canvas_height; i++) {
+    for (var j = 0; j < canvas_width; j++) {
+      var background_point = background_points[i * (canvas_width) + j];
+      var x0 = (( (j - (canvas_width  / 2))) / 100.0).toFixed(2);
+      var x1 = ((-(i - (canvas_height / 2))) / 100.0).toFixed(2);
+      var max_score = [-1000000000, -1];
+      for (var k = 0; k < classes.length; k++) {
+        var s = x0 * wb[k][0] + x1 * wb[k][1] + wb[k][2];  
+        max_score[0] = Math.max(max_score[0], s);
+        if(max_score[0] == s)
+          max_score[1] = k;
+      }
+      background_point.strokeColor = classes[max_score[1]];
+
+    }
+  }
+
+  paper.view.draw();
+}
+
+
 function GradientDescent() {
 
   learning_rate = 0.1;
@@ -180,7 +210,8 @@ function GradientDescent() {
     
     console.log(loss);
   }
-  
+
+  Inference();
 }
 
 /* Function to calculate the loss */
@@ -292,8 +323,8 @@ $(document).ready(function(){
 
   paper.install(window);
   canvas = document.getElementById('canvas_container');
-  canvas_width = canvas.clientWidth;
-  canvas_height = canvas.clientHeight;
+  canvas_width = canvas.clientWidth + 2;
+  canvas_height = canvas.clientHeight + 2;
   console.log("canvas_height : " + canvas_height);
   console.log("canvas_width : " + canvas_width);
   vis_canvas = new paper.PaperScope();
@@ -304,8 +335,22 @@ $(document).ready(function(){
 
   var background = new Shape.Rectangle({
       rectangle: view.bounds,
-      fillColor: "#555555"
+      fillColor: "#fff"
   });
+
+  
+  background_points = [];
+
+  for (var i = 0; i < canvas_height; i++) {
+    for (var j = 0; j < canvas_width; j++) {
+
+      var background_point = new Path.Line(new Point(j, i), new Point(j+1, i), 1);
+      background_point.strokeColor = "#555";
+      background_point.opacity = 0.3;
+      background_points.push(background_point);
+    }
+  }
+ 
 
   var tool = new Tool();
 
@@ -322,7 +367,6 @@ $(document).ready(function(){
     data_controls.append(input);
     data_controls.innerHTML += " " + input.value + "<br>";
   }
-
 
   loss_canvas_elmt = document.getElementById('canvas_loss');
 
@@ -363,8 +407,8 @@ $(document).ready(function(){
                         new Point(canvas_width, canvas_height/2));
   var y_axis = new Path(new Point(canvas_width/2, 0),
                         new Point(canvas_width/2, canvas_height));
-  x_axis.strokeColor = "#fff";
-  y_axis.strokeColor = "#fff";
+  x_axis.strokeColor = "#000";
+  y_axis.strokeColor = "#000";
 
   /* Drawing classifier specific lines */
   classifier_lines = [];
@@ -457,6 +501,6 @@ $(document).ready(function(){
 
 
   counter = 0;
-  var x = setInterval(GradientDescent, 1000);
+  setInterval(GradientDescent, 1000);
 
  });
