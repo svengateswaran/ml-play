@@ -68,7 +68,6 @@ function Inference() {
 
   for (var i = 0; i < canvas_height; i++) {
     for (var j = 0; j < canvas_width; j++) {
-      var background_point = background_points[i * (canvas_width) + j];
       var x0 = (( (j - (canvas_width  / 2))) / 100.0).toFixed(2);
       var x1 = ((-(i - (canvas_height / 2))) / 100.0).toFixed(2);
       var max_score = [-1000000000, -1];
@@ -78,12 +77,14 @@ function Inference() {
         if(max_score[0] == s)
           max_score[1] = k;
       }
-      background_point.strokeColor = classes[max_score[1]];
 
+      for (var k = 0; k < 3; k++) {
+        background_color.data[i * canvas_width * 4 + j * 4 + k] = classes_rgb[max_score[1]][k];
+      }
+      background_color.data[i * canvas_width * 4 + j * 4 + 3] = 100;    
     }
   }
-
-  paper.view.draw();
+  background.setImageData(background_color, new Point(canvas_width, canvas_height));
 }
 
 
@@ -197,8 +198,6 @@ function GradientDescent() {
       loss_lines[i].segments[1].point.y = loss_length - loss[i + 1];
   }
 
-  paper.view.draw();
-
   counter += 1;
   
   if (counter % 10 == 0) {
@@ -212,6 +211,8 @@ function GradientDescent() {
   }
 
   Inference();
+
+  paper.view.draw();
 }
 
 /* Function to calculate the loss */
@@ -330,32 +331,36 @@ $(document).ready(function(){
   vis_canvas = new paper.PaperScope();
   vis_canvas.setup(canvas);
 
+  ctx = canvas.getContext("2d");
   window.paper = vis_canvas;
   paper.install(window);
 
-  var background = new Shape.Rectangle({
-      rectangle: view.bounds,
-      fillColor: "#fff"
-  });
+  background = new Raster({
+                     size: {
+                       width : canvas_width * 2,
+                       height: canvas_height * 2
+                     }
+                   });
 
-  
-  background_points = [];
+  background.fillColor = "#ccc";
+  background.opacity = 1;
+
+  background_color = ctx.createImageData(canvas_width, canvas_height);
 
   for (var i = 0; i < canvas_height; i++) {
     for (var j = 0; j < canvas_width; j++) {
-
-      var background_point = new Path.Line(new Point(j, i), new Point(j+1, i), 1);
-      background_point.strokeColor = "#555";
-      background_point.opacity = 0.3;
-      background_points.push(background_point);
+      for (var k = 0; k < 4; k++) {
+        background_color.data[j * canvas_width * 4 + i * 4 + k] = 55;
+      }
     }
   }
- 
+  background.setImageData(background_color, new Point(canvas_width, canvas_height));
 
   var tool = new Tool();
 
   /* classes are identified by the HEX color code */
   classes = ["#E03131", "#31E031", "#3131E0"]
+  classes_rgb = [[255, 0, 0], [0, 255, 0], [0, 0, 255]];
   //classes = ["#E03131", "#31E031"]
 
   var data_controls = document.getElementById("data_controls");
