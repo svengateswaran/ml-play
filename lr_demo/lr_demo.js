@@ -16,8 +16,8 @@ function AddPointToTable(table, classes, point, data) {
   var table_x = table_row.insertCell(0);
   var table_y = table_row.insertCell(1);
   var table_data = table_row.insertCell(2);
-  table_x.innerHTML = point.x;
-  table_y.innerHTML = point.y;
+  table_x.innerHTML = point.x.toFixed(2);
+  table_y.innerHTML = point.y.toFixed(2);
   table_data.innerHTML = data;
   for (var i = 0; i < classes.length; i++) {
     var class_cell = table_row.insertCell();
@@ -30,7 +30,7 @@ function AddPointToTable(table, classes, point, data) {
 
 function CreateParameterCell(name) {
 
-  var data_value = (Math.random()).toFixed(2) * (Math.random() > 0.5 ? 1 : -1);
+  var data_value = (Math.random() * (Math.random() > 0.5 ? 1 : -1)).toFixed(2);
 
   var name = "<div>" + name + "</div>";
   var up = "<div class='controls'>▲</div>";
@@ -59,7 +59,7 @@ function CreateParametersTable(classes, table) {
 
 function GradientDescent() {
 
-  learning_rate = 0.001;
+  learning_rate = 0.1;
 
   ComputeLoss();
 
@@ -212,22 +212,42 @@ function ComputeLoss() {
       row.cells[3 + c].innerHTML = s.toFixed(2);
 
       /* Update classifier lines */
+      var classifier_weight_line = classifier_weight_lines[c];
+      var classifier_arrow = classifier_arrows[c];
+
       var classifier_line = classifier_lines[c];
 
       var lx0 = -canvas_width / 2;
       var lx1 = canvas_width / 2;
-      var ly0 = 0;
-      var ly1 = 0;
-      
-      if (w1 != 0) {
-        ly0 = -((w0*x0) + b) / w1  ;
-        ly1 = -((w0*x1) + b) / w1;
+
+      var lw0 = w0 * 100;
+      var lw1 = w1 * 100;
+      var lb  = b * 100;
+
+
+      var ly0 = lb;
+      var ly1 = lb;
+
+      var m =  - (lw0 / (lw1 - lb));
+
+      if ((lw1 - b) != 0) {
+        ly0 =  m * lx0 + lb;
+        ly1 =  m * lx1 + lb;
       }
       
       classifier_line.segments[0].point.x = lx0 + canvas_width/2;
-      classifier_line.segments[1].point.x = lx1 + canvas_width/2;
       classifier_line.segments[0].point.y = ly0 + canvas_height/2;
+
+      classifier_line.segments[1].point.x = lx1 + canvas_width/2;
       classifier_line.segments[1].point.y = ly1 + canvas_height/2;
+
+
+      classifier_weight_line.segments[0].point.y = (b  * 100) + canvas_height/2;
+      classifier_weight_line.segments[1].point.x = (w0 * 100) + canvas_width/2;
+      classifier_weight_line.segments[1].point.y = (w1 * 100) + canvas_height/2;
+
+      classifier_arrow.position.x = (w0 * 100) + canvas_width/2;
+      classifier_arrow.position.y = (w1 * 100) + canvas_height/2;
 
 
       paper.view.draw();
@@ -253,10 +273,12 @@ function ComputeLoss() {
 }
 
 function CreateDataPoint(x, y, c) {
-  var new_point = new Point(x + canvas_width/2 , -(y - canvas_height/2));
+
+  var new_point = new Point(x * 100 + canvas_width/2 , -(y * 100 - canvas_height/2));
   var new_circle = new Path.Circle(new_point, 5);
 
   new_circle.fillColor = classes[c];
+  new_circle.strokeColor = "#fff";
 
   data_points.addChild(new_circle);
   AddPointToTable(data_table, classes, new Point(x, y), c);
@@ -289,6 +311,7 @@ $(document).ready(function(){
 
   /* classes are identified by the HEX color code */
   classes = ["#E03131", "#31E031", "#3131E0"]
+  //classes = ["#E03131", "#31E031"]
 
   var data_controls = document.getElementById("data_controls");
   for (var i = 2; i < classes.length; i++) {
@@ -307,7 +330,7 @@ $(document).ready(function(){
 
   loss_scale = 2;
 
-   loss = new Array(loss_length / loss_scale);
+  loss = new Array(loss_length / loss_scale);
 
   loss_canvas = new paper.PaperScope();
   loss_canvas.setup(loss_canvas_elmt);
@@ -315,8 +338,8 @@ $(document).ready(function(){
   loss_lines = []
   for (var i = 0; i < loss.length; i++) {
     var loss_line = new Path.Line(new Point(i * loss_scale, 0),
-                                  new Point(i * loss_scale + 1, 0));
-    loss_line.strokeColor = "#f00";
+                                  new Point((i+1) * loss_scale, 0));
+    loss_line.strokeColor = "#E03131";
     loss_line.strokeWidth = 1;
     loss_lines.push(loss_line);
   }
@@ -345,12 +368,29 @@ $(document).ready(function(){
 
   /* Drawing classifier specific lines */
   classifier_lines = [];
+  classifier_weight_lines = [];
+  classifier_arrows = [];
+
   for (var i = 0; i < classes.length; i++) {
+
     var classifier_line = new Path.Line(new Point(0, 0),
                                    new Point(300, 150 + i * 50));
     classifier_line.strokeColor = classes[i];
     classifier_line.strokeWidth = 2;
     classifier_lines.push(classifier_line);
+
+    var classifier_weight_line = new Path.Line(new Point(canvas_width/2, canvas_height/2),
+                                   new Point(300, 150 + i * 50));
+    classifier_weight_line.strokeColor = classes[i];
+    classifier_weight_line.strokeWidth = 2;
+    classifier_weight_lines.push(classifier_weight_line);
+
+    //var classifier_arrow = new Path.RegularPolygon(new Point(canvas_width/2, canvas_height/2), 3, 30);
+    var classifier_arrow = new Path.Circle(new Point(canvas_width/2, canvas_height/2), 3);
+    classifier_arrow.fillColor = classes[i];
+    classifier_arrow.strokeColor = "#fff";
+    classifier_arrow.strokeWidth = 1;
+    classifier_arrows.push(classifier_arrow);
   }
 
   /* Drawing Hypothesis(decision boundary) line */
@@ -365,8 +405,8 @@ $(document).ready(function(){
 
   for(var i = 0; i < classes.length; i++) {
     for (var j = 0; j < num_sample_points; j++) {
-       var r_x = GetRandomValue(100, 0);
-       var r_y = GetRandomValue(100, 0);
+       var r_x = GetRandomValue(1, 2);
+       var r_y = GetRandomValue(1, 2);
        CreateDataPoint(r_x, r_y, i);
     }
   }
@@ -380,7 +420,7 @@ $(document).ready(function(){
         break;
     }
 
-    CreateDataPoint(event.point.x - canvas_width/2, - (event.point.y - canvas_height/2), i);
+    CreateDataPoint((event.point.x - canvas_width/2) / 100, - ((event.point.y - canvas_height/2)) / 100, i);
   }
 
 //  Just an Fun Animation till things get Ready
@@ -408,9 +448,9 @@ $(document).ready(function(){
 
     var control_type = $(this)[0].innerHTML;
     if (control_type.localeCompare("▲") == 0)
-      data.innerHTML = (parseFloat(data.innerHTML) + mod_value);
+      data.innerHTML = (parseFloat(data.innerHTML) + mod_value).toFixed(2);
     else
-      data.innerHTML = (parseFloat(data.innerHTML) - mod_value);
+      data.innerHTML = (parseFloat(data.innerHTML) - mod_value).toFixed(2);
 
     ComputeLoss();
   });
