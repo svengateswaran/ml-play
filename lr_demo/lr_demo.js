@@ -268,18 +268,18 @@ function ComputeLoss() {
       }
       
       classifier_line.segments[0].point.x = lx0 + canvas_width/2;
-      classifier_line.segments[0].point.y = ly0 + canvas_height/2;
+      classifier_line.segments[0].point.y = -(ly0) + canvas_height/2;
 
       classifier_line.segments[1].point.x = lx1 + canvas_width/2;
-      classifier_line.segments[1].point.y = ly1 + canvas_height/2;
+      classifier_line.segments[1].point.y = - (ly1) + canvas_height/2;
 
 
-      classifier_weight_line.segments[0].point.y = (b  * 100) + canvas_height/2;
+      classifier_weight_line.segments[0].point.y = - (b  * 100) + canvas_height/2;
       classifier_weight_line.segments[1].point.x = (w0 * 100) + canvas_width/2;
-      classifier_weight_line.segments[1].point.y = (w1 * 100) + canvas_height/2;
+      classifier_weight_line.segments[1].point.y = - (w1 * 100) + canvas_height/2;
 
       classifier_arrow.position.x = (w0 * 100) + canvas_width/2;
-      classifier_arrow.position.y = (w1 * 100) + canvas_height/2;
+      classifier_arrow.position.y = - (w1 * 100) + canvas_height/2;
 
 
       paper.view.draw();
