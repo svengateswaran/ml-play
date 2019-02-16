@@ -32,16 +32,16 @@ body {
 }
 
 #data_plot {
-  width: 300px;
+  width: 400px;
   margin:50px;
   float:left;
 }
 
 #canvas_container {
   float:left;
-  width: 300px;
-  height: 300px;
-  border:#000 1px solid;
+  width: 400px;
+  height: 400px;
+  /*border:#000 1px solid;&*/
 }
 
 #canvas_loss {
@@ -66,8 +66,8 @@ body {
 }
 
 #data_table th {
-  background-color: #E03131;
-  color: white;
+  background-color: #555;
+  color: #fff;
 }
 
 #data_table thead, tbody {
@@ -103,7 +103,6 @@ body {
 #parameters_table td{
   width:70px;
   height:70px;
-  background: #CCC;
 }
 
 .controls {
